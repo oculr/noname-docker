@@ -16,30 +16,30 @@ jobs:
       contents: read
       packages: read
     outputs:
-      version: ${{ steps.check.outputs.version }}
-      exists: ${{ steps.check.outputs.exists }}
+      version: ${{ steps.get_version.outputs.version }}
+      tag_status: ${{ steps.check_tag.outputs.tag }}
     steps:
       - name: Check GHCR Tag
-        id: check
+        id: get_version
         run: |
           LATEST_TAG=$(curl -s https://api.github.com/repos/libnoname/noname/releases/latest | jq -r .tag_name)
           VERSION=${LATEST_TAG#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
-          LOWERCASE_IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.REGISTRY }}/v2/${LOWERCASE_IMAGE_NAME}/manifests/${VERSION}")
-          
-          if [ "$HTTP_STATUS" = "200" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "$VERSION already exists in the registry. Skipping build."
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+          echo "Latest version from GitHub API: $VERSION"
+
+      - name: Check if tag exists in GHCR
+        id: check_tag
+        uses: tyriis/docker-image-tag-exists@v2026.6.1
+        with:
+          registry: ${{ env.REGISTRY }}
+          repository: ${{ env.IMAGE_NAME }}
+          tag: ${{ steps.get_version.outputs.version }}
+
 
   build-and-push:
     runs-on: ubuntu-latest
     needs: check-version
-    if: needs.check-version.outputs.exists != 'true'
+    if: needs.check-version.outputs.tag_status != 'found'
     
     permissions:
       contents: read
