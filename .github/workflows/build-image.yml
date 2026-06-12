@@ -19,7 +19,7 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
       tag_status: ${{ steps.check_tag.outputs.tag }}
     steps:
-      - name: Check GHCR Tag
+      - name: Check latest source
         id: get_version
         run: |
           LATEST_TAG=$(curl -s https://api.github.com/repos/libnoname/noname/releases/latest | jq -r .tag_name)
