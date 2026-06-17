@@ -29,7 +29,7 @@ jobs:
 
       - name: Check if tag exists in GHCR
         id: check_tag
-        uses: tyriis/docker-image-tag-exists@v2026.6.1
+        uses: tyriis/docker-image-tag-exists@v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
           repository: ${{ env.IMAGE_NAME }}
